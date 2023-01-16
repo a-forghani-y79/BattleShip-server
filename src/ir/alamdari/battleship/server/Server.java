@@ -38,7 +38,6 @@ public class Server {
 
         Socket socket;
         while (true) {
-            System.out.println("waiting for th client request");
 
             socket = serverSocket.accept();
             socket.setKeepAlive(true);
@@ -48,10 +47,8 @@ public class Server {
 
             Request request = (Request) objectInputStream.readObject();
 
-            System.out.println("request: " + request.toString());
 
             Response response = getResponseForRequest(request);
-            System.out.println("response:" + response.toString());
 
             objectOutputStream =
                     new ObjectOutputStream(socket.getOutputStream());
@@ -101,6 +98,9 @@ public class Server {
                     playerOne = request.getFrom();
                     playerOneArea = (int[][]) request.getData();
                     response.setData(playerOne != null && playerOneArea != null);
+                    if (battle == null)
+                        battle = new Battle();
+
                     battle.setPlayerOne(playerOne);
                     battle.setPlayerOneArea(playerOneArea);
                 } else if (playerTwo == null) {
@@ -118,14 +118,14 @@ public class Server {
             case 5:
                 //IS_MY_TURN(5),
                 response.setData(false);
-                if (request.getFrom() == playerOne && turn == 1)
+                if (request.getFrom().getName().equals(playerOne.getName()) && turn == 1)
                     response.setData(true);
-                else if (request.getFrom() == playerTwo && turn == 2)
+                else if (request.getFrom().getName().equals(playerTwo.getName()) && turn == 2)
                     response.setData(true);
                 break;
             case 6:
                 //GET_WINNER(6),
-                response.setData(null);
+                response.setData(getWinner(battle));
                 break;
             case 7:
 
@@ -135,7 +135,8 @@ public class Server {
             case 8:
                 //SHOOT(8)
                 int[] xy = (int[]) request.getData();
-                shoots(request.getFrom(), xy[0], xy[0], battle);
+                shoots(request.getFrom(), xy[0], xy[1], battle);
+                response.setData(request.getData());
                 break;
             default:
                 response.setData(null);
@@ -146,13 +147,58 @@ public class Server {
     }
 
     private static void shoots(Player shooter, int x, int y, Battle battle) {
-        if (battle.getPlayerOne().equals(shooter)) {
-            if (battle.getPlayerTwoArea()[x][y] != 0)
+        if (battle.getPlayerOne().getName().equals(shooter.getName())) {
+            if (battle.getPlayerTwoArea()[x][y] != 0) {
                 battle.getPlayerTwoArea()[x][y] = -1;
-        } else if (battle.getPlayerTwo().equals(shooter))
-            if (battle.getPlayerOneArea()[x][y] != 0)
-                battle.getPlayerOneArea()[x][y] = -1;
+                turn = 1;
+            } else {
+                battle.getPlayerTwoArea()[x][y] = -2;
 
+                turn = 2;
+            }
+        } else if (battle.getPlayerTwo().getName().equals(shooter.getName()))
+            if (battle.getPlayerOneArea()[x][y] != 0) {
+                battle.getPlayerOneArea()[x][y] = -1;
+                turn = 2;
+            } else {
+                battle.getPlayerOneArea()[x][y] = -2;
+                turn = 1;
+            }
+
+    }
+    private static void printArray(int[][] array) {
+        System.out.println("-------------------");
+        for (int[] ints : array) {
+            for (int anInt : ints) {
+                System.out.print(anInt + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("-------------------");
+    }
+    private static Player getWinner(Battle battle){
+        int countUpperZeroOne =0;
+        for (int[] ints : battle.getPlayerOneArea()) {
+            for (int anInt : ints) {
+                if (anInt>0)
+                    countUpperZeroOne++;
+            }
+        }
+        int countUpperZeroTwo =0;
+        for (int[] ints : battle.getPlayerTwoArea()) {
+            for (int anInt : ints) {
+                if (anInt>0)
+                    countUpperZeroTwo++;
+            }
+        }
+
+        if (countUpperZeroOne==0)
+            return battle.getPlayerTwo();
+
+        if (countUpperZeroTwo==0)
+            return battle.getPlayerOne();
+
+        return null;
     }
 
 }
