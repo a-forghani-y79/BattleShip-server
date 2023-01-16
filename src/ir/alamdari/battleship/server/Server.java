@@ -1,5 +1,6 @@
 package ir.alamdari.battleship.server;
 
+import ir.alamdari.battleship.model.Ship;
 import ir.alamdari.battleship.model.comminucations.Request;
 import ir.alamdari.battleship.model.comminucations.Response;
 import ir.alamdari.battleship.model.comminucations.Type;
@@ -9,6 +10,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
     static ServerSocket serverSocket;
@@ -63,6 +66,15 @@ public class Server {
                 response.setData(true);
                 break;
             case 2:
+                List<Ship> ships = new ArrayList<>();
+                ships.add(new Ship(1,4,"Ship one","#FF5733"));
+                ships.add(new Ship(1,4,"Ship one","#05FF2B"));
+                ships.add(new Ship(1,4,"Ship one","#057BFF"));
+                ships.add(new Ship(1,4,"Ship one","#9305FF"));
+                ships.add(new Ship(1,4,"Ship one","#FF05B1"));
+
+                response.setData(ships);
+
                 break;
             case 3:
                 break;
